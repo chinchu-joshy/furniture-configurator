@@ -31,8 +31,19 @@
 .home {
   border: 2px rgb(7, 7, 7) solid;
   box-sizing: border-box;
+  position: relative;
 }
 .canvas{
   margin: 3px;
-  height:inherit;
+  height:400px;
+  width: 400px;
+}
+.icon{
+  position: absolute;
+  font-size: 30px;
+  color: rgb(81, 82, 97);
+  right: 10px;
+}
+.icon:hover{
+  opacity: .5;
 }

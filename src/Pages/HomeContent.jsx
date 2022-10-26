@@ -4,6 +4,7 @@ import Scene from "../3D/Scene/Scene";
 function HomeContent() {
     
   return (
+    <>
     <div className="container-home">
         <div className="left">
         <h5 className="content-head-home">App-less <span>Augmented
@@ -15,6 +16,9 @@ function HomeContent() {
      
       <Scene />
     </div>
+    
+    </>
+    
   );
 }
 

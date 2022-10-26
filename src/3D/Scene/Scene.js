@@ -2,72 +2,146 @@ import React, { useEffect } from "react";
 
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import FBXLoader from 'three-fbx-loader'
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import {FaUserEdit} from 'react-icons/fa'
 function Scene() {
   useEffect(() => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5f5f5);
+    const canvas = document.querySelector(".canvas");
     const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
+      45,
+      canvas.offsetWidth / canvas.offsetHeight,
       1,
       10000
     );
     camera.lookAt(0, 0, 0);
-    const canvas = document.querySelector(".canvas");
+    camera.position.set(9,9,15);
 
     const renderer = new THREE.WebGL1Renderer({ canvas, antialias: true });
     // adding venus
 
     window.scene = scene;
+    const light = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(light);
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    const pointLight2 = new THREE.PointLight(0xffffff, 0.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    const pointLight2 = new THREE.PointLight(0xffffff, 0.1);
-    pointLight.position.set(8, 5, 5);
+    //scene.add( directionalLight );
+    pointLight.position.set(1, 10, 13);
     pointLight2.position.set(-8, -5, -5);
     scene.add(pointLight);
-    scene.add(pointLight2);
-    camera.position.set(4, 4, 8);
+    //  scene.add(pointLight2);
+    
     // event listeners
 
-    renderer.setSize(400, 500);
+    renderer.setSize( canvas.offsetWidth,canvas.offsetHeight);
     window.addEventListener("resize", onResize, false);
     const animation = () => {
       requestAnimationFrame(animation);
-
       controls.update();
       renderer.render(scene, camera);
     };
-//  function preloadTexture(){
-//   const textureLoader = new THREE.TextureLoader()
-//   const textureArray=[]
-//   new Promise((resolve,reject)=>{
-//     for (const key in this.textures) {
-//       this.texturePromises.push(
-//         new Promise((resolve, reject) => {
-//           textureLoader.load(baseURL + '/' + this.textures[key], (texture) => {
-//             this.loadedTextures[key] = texture
-//             resolve(texture)
-//           })
-//         })
-//       )
-//     }
+    //  function preloadTexture(){
+    //   const textureLoader = new THREE.TextureLoader()
+    //   const textureArray=[]
+    //   new Promise((resolve,reject)=>{
+    //     for (const key in this.textures) {
+    //       this.texturePromises.push(
+    //         new Promise((resolve, reject) => {
+    //           textureLoader.load(baseURL + '/' + this.textures[key], (texture) => {
+    //             this.loadedTextures[key] = texture
+    //             resolve(texture)
+    //           })
+    //         })
+    //       )
+    //     }
 
-//     Promise.all(this.texturePromises).then((res) => {
-//       if (initialModel) {
-//         this.preloadModel(modelName, false, callBack, mode)
-//       }
-//     })
-//   })
-//  }
-const loadModel = new FBXLoader();
+    //     Promise.all(this.texturePromises).then((res) => {
+    //       if (initialModel) {
+    //         this.preloadModel(modelName, false, callBack, mode)
+    //       }
+    //     })
+    //   })
+    //  }
+    const loader = new FBXLoader();
 
-// loadModel.load('../../Model/chair.fbx', function (object3d) {
-//   console.log(object3d)
-//   console.log('heloo')
-//   scene.add(object3d);
-// });
+    // loadModel.load('../../Model/chair.fbx', (object3d) {
+    //   console.log(object3d)
+    //   console.log('heloo')
+    //   // scene.add(object3d);
+    // });
+    const texture = new THREE.TextureLoader().load(
+      "Model/Texture/a_bean bag_AlbedoTransparency.jpg"
+    );
+    const textureWall = new THREE.TextureLoader().load(
+      "Model/a_chair_AlbedoTransparency.jpg"
+    );
+    const normalTextureChair = new THREE.TextureLoader();
+    const textureBase = new THREE.TextureLoader().load(
+      "Model/a_ground_AlbedoTransparency.jpg"
+    );
+    const ventTexture = new THREE.TextureLoader().load(
+      "Model/Texture/a_ground_AlbedoTransparency.jpg"
+    );
+    normalTextureChair.load(
+      "./Model/Texture/a_bean bag_AlbedoTransparency.jpg",
+      (loadedTexture) => {
+        console.log();
+        loader.load(
+          "./Model/bean bag.fbx",
+          (fbx) => {
+            
+            fbx.traverse((child) => {
+             if(child.isMesh && child.name.includes('ground')){
+              child.material = new THREE.MeshStandardMaterial();
+              child.castShadow = true;
+              child.receiveShadow = true;
+              child.material.map = ventTexture;
+              
+              child.material.map.wrapS = THREE.RepeatWrapping;
+              child.material.map.wrapT = THREE.RepeatWrapping;
+              child.material.needsUpdate = true;
+              child.material.map.needsUpdate = true;
+             }else{
+              // child.scale.set(.5,.5,.5)
+              child.material = new THREE.MeshStandardMaterial();
+              child.castShadow = true;
+              child.receiveShadow = true;
+              child.material.map = loadedTexture;
+              
+              child.material.map.wrapS = THREE.RepeatWrapping;
+              child.material.map.wrapT = THREE.RepeatWrapping;
+              child.material.needsUpdate = true;
+              child.material.map.needsUpdate = true;
+             }
+             
+            });
+
+            // child.material.color = new THREE.Color(color);
+fbx.scale.set(.04,.04,.04)
+            // fbx.position.x = 15;
+            // fbx.position.z = -130;
+            // fbx.position.y = -0.6;
+            //  fbx.rotation.y=.2
+
+            scene.add(fbx);
+          },
+          (progress) => {},
+          (error) => {
+            console.log("error is", error);
+          }
+        );
+      }
+    );
+
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.maxPolarAngle = Math.PI * 0.495;
+  //   controls.target.set(0, 0, 0);
+  // camera.lookAt(0, 0, 0);
+  controls.minDistance = 5.0;
+  controls.maxDistance = 8.0;
     controls.update();
     animation();
     function onResize() {
@@ -78,6 +152,11 @@ const loadModel = new FBXLoader();
   }, []);
   return (
     <div className="home">
+    <div className="icon">
+    <FaUserEdit/>
+    </div>
+
+      
       <canvas className="canvas"></canvas>
     </div>
   );
