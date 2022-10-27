@@ -1,10 +1,30 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
-import {FaUserEdit} from 'react-icons/fa'
+import { FaUserEdit, BiQrScan } from "react-icons/fa";
+
+import { ChromePicker } from "react-color";
 function Scene() {
+  const [color, setcolor] = useState({ displayColorPicker: false });
+  const handleClick = () => {
+    setcolor({ displayColorPicker: !color.displayColorPicker });
+  };
+  const handleClose = () => {
+    setcolor({ displayColorPicker: false });
+  };
+  const popover = {
+    position: "absolute",
+    zIndex: "2",
+  };
+  const cover = {
+    position: "fixed",
+    top: "0px",
+    right: "0px",
+    bottom: "0px",
+    left: "0px",
+  };
   useEffect(() => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5f5f5);
@@ -16,7 +36,7 @@ function Scene() {
       10000
     );
     camera.lookAt(0, 0, 0);
-    camera.position.set(9,9,15);
+    camera.position.set(9, 9, 15);
 
     const renderer = new THREE.WebGL1Renderer({ canvas, antialias: true });
     // adding venus
@@ -33,10 +53,10 @@ function Scene() {
     pointLight2.position.set(-8, -5, -5);
     scene.add(pointLight);
     //  scene.add(pointLight2);
-    
+
     // event listeners
 
-    renderer.setSize( canvas.offsetWidth,canvas.offsetHeight);
+    renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
     window.addEventListener("resize", onResize, false);
     const animation = () => {
       requestAnimationFrame(animation);
@@ -92,35 +112,33 @@ function Scene() {
         loader.load(
           "./Model/bean bag.fbx",
           (fbx) => {
-            
             fbx.traverse((child) => {
-             if(child.isMesh && child.name.includes('ground')){
-              child.material = new THREE.MeshStandardMaterial();
-              child.castShadow = true;
-              child.receiveShadow = true;
-              child.material.map = ventTexture;
-              
-              child.material.map.wrapS = THREE.RepeatWrapping;
-              child.material.map.wrapT = THREE.RepeatWrapping;
-              child.material.needsUpdate = true;
-              child.material.map.needsUpdate = true;
-             }else{
-              // child.scale.set(.5,.5,.5)
-              child.material = new THREE.MeshStandardMaterial();
-              child.castShadow = true;
-              child.receiveShadow = true;
-              child.material.map = loadedTexture;
-              
-              child.material.map.wrapS = THREE.RepeatWrapping;
-              child.material.map.wrapT = THREE.RepeatWrapping;
-              child.material.needsUpdate = true;
-              child.material.map.needsUpdate = true;
-             }
-             
+              if (child.isMesh && child.name.includes("ground")) {
+                child.material = new THREE.MeshStandardMaterial();
+                child.castShadow = true;
+                child.receiveShadow = true;
+                child.material.map = ventTexture;
+
+                child.material.map.wrapS = THREE.RepeatWrapping;
+                child.material.map.wrapT = THREE.RepeatWrapping;
+                child.material.needsUpdate = true;
+                child.material.map.needsUpdate = true;
+              } else {
+                // child.scale.set(.5,.5,.5)
+                child.material = new THREE.MeshStandardMaterial();
+                child.castShadow = true;
+                child.receiveShadow = true;
+                child.material.map = loadedTexture;
+
+                child.material.map.wrapS = THREE.RepeatWrapping;
+                child.material.map.wrapT = THREE.RepeatWrapping;
+                child.material.needsUpdate = true;
+                child.material.map.needsUpdate = true;
+              }
             });
 
             // child.material.color = new THREE.Color(color);
-fbx.scale.set(.04,.04,.04)
+            fbx.scale.set(0.04, 0.04, 0.04);
             // fbx.position.x = 15;
             // fbx.position.z = -130;
             // fbx.position.y = -0.6;
@@ -138,10 +156,10 @@ fbx.scale.set(.04,.04,.04)
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.maxPolarAngle = Math.PI * 0.495;
-  //   controls.target.set(0, 0, 0);
-  // camera.lookAt(0, 0, 0);
-  controls.minDistance = 5.0;
-  controls.maxDistance = 8.0;
+    //   controls.target.set(0, 0, 0);
+    // camera.lookAt(0, 0, 0);
+    controls.minDistance = 5.0;
+    controls.maxDistance = 8.0;
     controls.update();
     animation();
     function onResize() {
@@ -152,11 +170,30 @@ fbx.scale.set(.04,.04,.04)
   }, []);
   return (
     <div className="home">
-    <div className="icon">
-    <FaUserEdit/>
-    </div>
+      <div className="icon">
+        <ul>
+          <li>
+            {" "}
+            <FaUserEdit />
+          </li>
+          <li>
+            {" "}
+            <img className="ar-icon" src="ar-icon.png"></img>
+          </li>
+        </ul>
+      </div>
+      <div className="change-color">
+        <button onClick={handleClick}>Pick Color</button>
+        {color.displayColorPicker ? (
+          <div style={popover}>
+            <div style={cover} onClick={handleClose} />
+            <ChromePicker />
+          </div>
+        ) : null}
+      </div>
 
-      
+      <div className="edit"></div>
+
       <canvas className="canvas"></canvas>
     </div>
   );

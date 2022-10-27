@@ -15,6 +15,7 @@ function HomeContent() {
         </div>
      
       <Scene />
+     
     </div>
     
     </>

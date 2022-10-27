@@ -38,12 +38,37 @@
   height:400px;
   width: 400px;
 }
+.ar-icon{
+  height: 30px;
+  width: 30px;
+  
+  
+}
 .icon{
   position: absolute;
   font-size: 30px;
   color: rgb(81, 82, 97);
   right: 10px;
 }
-.icon:hover{
-  opacity: .5;
+.icon ul li{
+  list-style-type: none;
 }
+.edit{
+  width: 100%;
+  height: 80px;
+  background-color: rgb(16, 17, 17);
+  opacity: .4;
+  position: absolute;
+  bottom: 0;
+  /* display: none; */
+}
+.color-picker{
+  position: absolute;
+}
+.change-color{
+  position: absolute;
+  bottom: 50px;
+  left: 5px;
+  z-index: 10;
+}
+
