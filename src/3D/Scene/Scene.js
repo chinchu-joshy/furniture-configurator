@@ -1,34 +1,36 @@
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import { FaUserEdit, BiQrScan } from "react-icons/fa";
-
-import { ChromePicker } from "react-color";
+import { SketchPicker, BlockPicker } from "react-color";
+import "react-color-palette/lib/css/styles.css";
+import { ARButton } from 'three/examples/jsm/Button/arButton'
 function Scene() {
-  const [color, setcolor] = useState({ displayColorPicker: false });
-  const handleClick = () => {
-    setcolor({ displayColorPicker: !color.displayColorPicker });
+  const [sketchPickerColor, setSketchPickerColor] = useState({
+    color: "#BEB068",
+  });
+  const [pickcolor, setPickcolor] = useState(false);
+  const [btn, setBtnClicked] = useState(false);
+  const pickColor = () => {
+    setPickcolor(!pickcolor);
   };
-  const handleClose = () => {
-    setcolor({ displayColorPicker: false });
-  };
-  const popover = {
-    position: "absolute",
-    zIndex: "2",
-  };
-  const cover = {
-    position: "fixed",
-    top: "0px",
-    right: "0px",
-    bottom: "0px",
-    left: "0px",
-  };
+  const ref = useRef(null);
+  // destructuring rgba from state
+  const loader = new FBXLoader();
+  let model;
+  let canvas;
+  let controls;
+
   useEffect(() => {
+    let color = "#ffffff";
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5f5f5);
-    const canvas = document.querySelector(".canvas");
+    canvas = document.querySelector(".canvas");
+    
+    canvas.addEventListener("click", (e) => {
+      setPickcolor(false);
+    });
     const camera = new THREE.PerspectiveCamera(
       45,
       canvas.offsetWidth / canvas.offsetHeight,
@@ -39,26 +41,29 @@ function Scene() {
     camera.position.set(9, 9, 15);
 
     const renderer = new THREE.WebGL1Renderer({ canvas, antialias: true });
-    // adding venus
-
+    renderer.xr.enabled = true;
+    
     window.scene = scene;
-    const light = new THREE.AmbientLight(0xffffff, 1);
+    const light = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(light);
     const pointLight = new THREE.PointLight(0xffffff, 0.5);
     const pointLight2 = new THREE.PointLight(0xffffff, 0.5);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
 
-    //scene.add( directionalLight );
+    scene.add(directionalLight);
     pointLight.position.set(1, 10, 13);
-    pointLight2.position.set(-8, -5, -5);
+    pointLight2.position.set(-8, -5, -20);
     scene.add(pointLight);
     //  scene.add(pointLight2);
 
     // event listeners
 
     renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+    document.body.appendChild(ARButton.createButton(renderer));
+    console.log(canvas)
     window.addEventListener("resize", onResize, false);
     const animation = () => {
+      color = sketchPickerColor?.color;
       requestAnimationFrame(animation);
       controls.update();
       renderer.render(scene, camera);
@@ -70,7 +75,7 @@ function Scene() {
     //     for (const key in this.textures) {
     //       this.texturePromises.push(
     //         new Promise((resolve, reject) => {
-    //           textureLoader.load(baseURL + '/' + this.textures[key], (texture) => {
+    //           textureLoader.load(baseURL + '/' + this.textures[key], //(texture) => {
     //             this.loadedTextures[key] = texture
     //             resolve(texture)
     //           })
@@ -85,7 +90,6 @@ function Scene() {
     //     })
     //   })
     //  }
-    const loader = new FBXLoader();
 
     // loadModel.load('../../Model/chair.fbx', (object3d) {
     //   console.log(object3d)
@@ -102,48 +106,53 @@ function Scene() {
     const textureBase = new THREE.TextureLoader().load(
       "Model/a_ground_AlbedoTransparency.jpg"
     );
-    const ventTexture = new THREE.TextureLoader().load(
-      "Model/Texture/a_ground_AlbedoTransparency.jpg"
+    const groundTexture = new THREE.TextureLoader().load(
+      "Model/a_ground_AlbedoTransparency.jpg"
     );
     normalTextureChair.load(
-      "./Model/Texture/a_bean bag_AlbedoTransparency.jpg",
+      "./Model/a_bean bag_AlbedoTransparency.jpg",
       (loadedTexture) => {
         console.log();
         loader.load(
           "./Model/bean bag.fbx",
           (fbx) => {
+            model = fbx;
+            console.log(model);
+            // const box = new THREE.Box3().setFromObject(model.getObjectByName("Bean_Bag"))
+            // console.log(box)
+            // const vector = new THREE.Vector3(0, 0, 0)
+            // camera.lookAt(box.getSize(vector).x/2, 0, box.getSize(vector).z/2)
+            // controls.target = new THREE.Vector3(box.getSize(vector).x/2, 0, box.getSize(vector).z/2)
+            // controls.update()
             fbx.traverse((child) => {
               if (child.isMesh && child.name.includes("ground")) {
                 child.material = new THREE.MeshStandardMaterial();
                 child.castShadow = true;
                 child.receiveShadow = true;
-                child.material.map = ventTexture;
-
+                child.material.map = groundTexture;
                 child.material.map.wrapS = THREE.RepeatWrapping;
                 child.material.map.wrapT = THREE.RepeatWrapping;
                 child.material.needsUpdate = true;
                 child.material.map.needsUpdate = true;
               } else {
-                // child.scale.set(.5,.5,.5)
                 child.material = new THREE.MeshStandardMaterial();
                 child.castShadow = true;
                 child.receiveShadow = true;
                 child.material.map = loadedTexture;
-
+                child.material.color = new THREE.Color(color);
                 child.material.map.wrapS = THREE.RepeatWrapping;
                 child.material.map.wrapT = THREE.RepeatWrapping;
                 child.material.needsUpdate = true;
+                child.material.color.needsUpdate = true;
                 child.material.map.needsUpdate = true;
               }
             });
-
             // child.material.color = new THREE.Color(color);
             fbx.scale.set(0.04, 0.04, 0.04);
             // fbx.position.x = 15;
             // fbx.position.z = -130;
             // fbx.position.y = -0.6;
-            //  fbx.rotation.y=.2
-
+            // fbx.rotation.y=.2;
             scene.add(fbx);
           },
           (progress) => {},
@@ -154,9 +163,9 @@ function Scene() {
       }
     );
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.maxPolarAngle = Math.PI * 0.495;
-    //   controls.target.set(0, 0, 0);
+    // controls.target.set(0, 0, 0);
     // camera.lookAt(0, 0, 0);
     controls.minDistance = 5.0;
     controls.maxDistance = 8.0;
@@ -168,6 +177,21 @@ function Scene() {
       renderer.setSize(canvas.width, canvas.height);
     }
   }, []);
+  useEffect(() => {
+    changeColor(sketchPickerColor.color);
+  }, [sketchPickerColor.color]);
+
+  const changeColor = useCallback(
+    (color) => {
+      model?.traverse((child) => {
+        if (child.isMesh && !child.name.includes("ground")) {
+          child.material.color = new THREE.Color(color);
+        }
+      });
+    },
+    [model]
+  );
+
   return (
     <div className="home">
       <div className="icon">
@@ -182,14 +206,24 @@ function Scene() {
           </li>
         </ul>
       </div>
+
       <div className="change-color">
-        <button onClick={handleClick}>Pick Color</button>
-        {color.displayColorPicker ? (
-          <div style={popover}>
-            <div style={cover} onClick={handleClose} />
-            <ChromePicker />
+        {pickcolor ? (
+          <div id="element">
+            {" "}
+            <SketchPicker
+              ref={ref}
+              onChange={(color) => {
+                setSketchPickerColor({ color: color.hex });
+              }}
+              color={sketchPickerColor.color}
+            />
           </div>
-        ) : null}
+        ) : (
+          <button id="btn" onClick={pickColor}>
+            Pick Color
+          </button>
+        )}
       </div>
 
       <div className="edit"></div>
