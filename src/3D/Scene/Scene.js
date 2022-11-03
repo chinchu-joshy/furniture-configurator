@@ -59,7 +59,7 @@ function Scene() {
     // event listeners
 
     renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
-    document.body.appendChild(ARButton.createButton(renderer));
+    document.querySelector(".edit").appendChild(ARButton.createButton(renderer));
     console.log(canvas)
     window.addEventListener("resize", onResize, false);
     const animation = () => {
